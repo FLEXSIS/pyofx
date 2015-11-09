@@ -1,3 +1,5 @@
+from future.moves import winreg
+
 try:
     from tkinter import Tk
 except ImportError:
@@ -6,7 +8,6 @@ except ImportError:
 import time
 import os
 import tempfile
-import ctypes
 import csv
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 import io
@@ -14,7 +15,8 @@ import inspect
 import math
 
 from OrcFxAPI import *
-_is64bit = ct.sizeof(ct.c_voidp) == 8
+
+_is64bit = ctypes.sizeof(ctypes.c_voidp) == 8
 
 
 class OFXError(Exception):

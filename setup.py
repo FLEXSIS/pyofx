@@ -3,14 +3,13 @@ from setuptools import setup
 README = os.path.join(os.path.dirname(__file__), 'README.md')
 try:
     import pypandoc
-    LONG = pypandoc.convert(README, 'rst')
+    LONG = pypandoc.convert(README, format='md', to="rst")
 except ImportError as e:
-    print e
     LONG = open(README).read()
 
 setup(
     name="pyOfx",
-    version="0.1.0",
+    version="0.1.1",
     author="Steven Rossiter",
     author_email="steve@flexsis.co.uk",
     description=("A wrapper around OrcFxAPI by Orcina "
