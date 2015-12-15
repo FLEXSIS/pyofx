@@ -1,11 +1,11 @@
-from future.moves import winreg
+import winreg
 
 try:
     from tkinter import Tk
 except ImportError:
     # python 2 then
     from Tkinter import Tk
-import time
+
 import os
 import tempfile
 import csv
@@ -20,7 +20,6 @@ _is64bit = ctypes.sizeof(ctypes.c_voidp) == 8
 
 
 class OFXError(Exception):
-
     """Branded errors so we know it's our fault"""
     pass
 
@@ -71,11 +70,11 @@ def get_unc_path(local_name):
     length = ctypes.c_long(0)
     remote_name = ctypes.create_string_buffer("")
     result = WNetGetConnection(
-        mapped_name, remote_name, ctypes.byref(length))
+            mapped_name, remote_name, ctypes.byref(length))
     if result == ERROR_MORE_DATA:
         remote_name = ctypes.create_string_buffer(length.value)
         result = WNetGetConnection(
-            mapped_name, remote_name, ctypes.byref(length))
+                mapped_name, remote_name, ctypes.byref(length))
         if result != 0:
             return None
         else:
@@ -92,10 +91,10 @@ def dat_sim_paths(directory, name, yml=False):
         return os.path.join(directory, name + '.dat'), os.path.join(directory, name + '.sim')
 
 
-def _xyz_to_clipboard(x,y,z):
+def _xyz_to_clipboard(x, y, z):
     """ place string for xyz arrary on the clipbaord to paste in drawing form"""
     _xyz = list(zip([str(_x) for _x in x], [str(_y)
-               for _y in y], [str(_z) for _z in z]))
+                                            for _y in y], [str(_z) for _z in z]))
     s = ""
     for xyz in _xyz:
         s += "\t".join(xyz) + "\n"
@@ -104,6 +103,7 @@ def _xyz_to_clipboard(x,y,z):
     r.clipboard_clear()
     r.clipboard_append(s)
     r.destroy()
+
 
 def vessel_drawing(length, depth, beam, bow_scale=(0.9, 0.95), vessel_type=None):
     """scale the default OrcaFlex vessel type drawing
@@ -115,7 +115,6 @@ def vessel_drawing(length, depth, beam, bow_scale=(0.9, 0.95), vessel_type=None)
     the drawing will be applied otherwise the correct array is copied to the clipboard to paste 
     into the vessel type drawing table.  
     """
-
 
     l = length / 2.0
     d = depth / 2.0
@@ -134,7 +133,7 @@ def vessel_drawing(length, depth, beam, bow_scale=(0.9, 0.95), vessel_type=None)
         vessel_type.VertexY = y
         vessel_type.VertexZ = z
     else:
-        _xyz_to_clipboard(x,y,z)
+        _xyz_to_clipboard(x, y, z)
 
 
 def buoy_drawing(size, ofx_object=None):
@@ -149,19 +148,18 @@ def buoy_drawing(size, ofx_object=None):
     _x = [1, -1, -1, 1, 1, -1, -1, 1]
     _y = [1, 1, -1, -1, 1, 1, -1, -1]
     _z = [1, 1, 1, 1, -1, -1, -1, -1]
-    _sx = [float(size)/2 * x for x in _x]
-    _sy = [float(size)/2 * y for y in _y]
-    _sz = [float(size)/2 * z for z in _z]
+    _sx = [float(size) / 2 * x for x in _x]
+    _sy = [float(size) / 2 * y for y in _y]
+    _sz = [float(size) / 2 * z for z in _z]
     if ofx_object and ofx_object.type == ot6DBuoy:
         ofx_object.VertexX = _sx
         ofx_object.VertexY = _sy
         ofx_object.VertexZ = _sz
     else:
-        _xyz_to_clipboard(_sx,_sy,_sz)
+        _xyz_to_clipboard(_sx, _sy, _sz)
 
 
 class Model(Model):
-
     """Wrapper around OrcFxAPI.Model to add extra functionality.
 
     1. added path attribute so the location of the model on the disc can be found from:
@@ -232,7 +230,7 @@ class Model(Model):
             assert os.path.isdir(installation_directory)
         except AssertionError as error:
             raise OFXError(
-                "{} might not be a directory".format(installation_directory))
+                    "{} might not be a directory".format(installation_directory))
         os.chdir(installation_directory)
         try:
             print("{} has been opened in the OrcaFlex GUI.".format(self.path))
@@ -240,7 +238,7 @@ class Model(Model):
             print("{} has been closed.".format(self.path))
         except CalledProcessError as cpe:
             raise OFXError(
-                "Error opening {} in OrcaFlex:\n{}".format(self.path, cpe.output))
+                    "Error opening {} in OrcaFlex:\n{}".format(self.path, cpe.output))
 
     def SaveData(self, filename):
         super(Model, self).SaveData(filename)
@@ -276,8 +274,8 @@ class Model(Model):
             return typed_objects
         else:
             raise OFXError(
-                ("The test must be for a string in the object name or a filter function. ",
-                 "Was passed an {}".format(type(test))))
+                    ("The test must be for a string in the object name or a filter function. ",
+                     "Was passed an {}".format(type(test))))
 
     @property
     def lines(self):
@@ -345,7 +343,7 @@ class Models(object):
         self.filetype = filetype
         if self.filetype not in ['sim', 'dat', 'yml']:
             raise OFXError(
-                "filetype must be 'sim', 'dat' or 'yml' not '{}'".format(self.filetype))
+                    "filetype must be 'sim', 'dat' or 'yml' not '{}'".format(self.filetype))
         self.sub = subdirectories
         self.return_model = return_model
         self.virtual_logging = virtual_logging
@@ -361,7 +359,7 @@ class Models(object):
             self.failed_function = failed_function
         elif failed_function:
             raise OFXError(
-                "Failed failed_function needs to be called on .sim files")
+                    "Failed failed_function needs to be called on .sim files")
 
         if isinstance(directories, str):
             self._dirs.append(directories)
@@ -398,7 +396,7 @@ class Models(object):
                 return model_path
 
         test_fun = lambda _rf: self.filter_function(
-            os.path.join(_rf[0], _rf[1])) and _rf[1].endswith(extension)
+                os.path.join(_rf[0], _rf[1])) and _rf[1].endswith(extension)
         for d in self._dirs:
             if self.sub:
                 paths = [(r, f) for r, d, f in os.walk(d)]
@@ -409,7 +407,6 @@ class Models(object):
 
 
 class Jobs():
-
     r""" Python interface to Distributed OrcaFlex
 
         >>> from pyofx import Jobs
@@ -441,7 +438,7 @@ class Jobs():
                                 'Software\\Orcina\\Distributed OrcaFlex\\Installation Directory',
                                 0, winreg.KEY_READ | winreg.KEY_WOW64_32KEY) as key:
                 self.installation_directory = winreg.QueryValueEx(
-                    key, 'Normal')[0]
+                        key, 'Normal')[0]
         except WindowsError:
             raise OFXError("Distributed OrcaFlex not found.")
         if not dllname:
@@ -450,14 +447,14 @@ class Jobs():
                                     'Software\\Orcina\\Distributed OrcaFlex',
                                     0, winreg.KEY_READ | winreg.KEY_WOW64_32KEY) as key:
                     self.dllname = winreg.QueryValueEx(
-                        key, 'DOFWorkingDirectory')[0]
+                            key, 'DOFWorkingDirectory')[0]
             except WindowsError:
                 try:
                     with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
                                         'Software\\Orcina',
                                         0, winreg.KEY_READ | winreg.KEY_WOW64_32KEY) as key:
                         self.dllname = winreg.QueryValueEx(
-                            key, 'DOFDefaultDLLFileName')[0]
+                                key, 'DOFDefaultDLLFileName')[0]
                 except:
                     raise OFXError("An attempt to find the location of OrcFxAPI.dll failed."
                                    " You should set the registry keys as advised in the "
@@ -469,9 +466,9 @@ class Jobs():
         self.batch_fd, self.batch_path = tempfile.mkstemp(suffix=".bat")
         self.batch_file = open(self.batch_path, 'wb')
         self.batch_file.write(
-            """echo off\r\ncd "%s"\r\n""" % self.installation_directory)
+                """echo off\r\ncd "%s"\r\n""" % self.installation_directory)
         self.file_list_fd, self.file_list_path = tempfile.mkstemp(
-            suffix=".txt")
+                suffix=".txt")
         self.file_list_file = open(self.file_list_path, 'wb')
 
     def __iter__(self):
@@ -489,7 +486,7 @@ class Jobs():
                 filepath = get_unc_path(filepath[0]) + filepath[2:]
             else:
                 raise OFXError(
-                    "{} must be a network filepath (or mapped drive).".format(filepath))
+                        "{} must be a network filepath (or mapped drive).".format(filepath))
         try:
             a = open(filepath)
             a.close()
@@ -508,11 +505,11 @@ class Jobs():
 
         cmdline_template = '"{}" -add {}{}-dllname="{}" "{}"\r\n'
         cmdline = cmdline_template.format(
-            os.path.join(self.installation_directory,
-                         "dofcmd.exe"),
-            "-wait " if wait else "",
-            "-statics " if statics else "",
-            self.dllname, self.file_list_path)
+                os.path.join(self.installation_directory,
+                             "dofcmd.exe"),
+                "-wait " if wait else "",
+                "-statics " if statics else "",
+                self.dllname, self.file_list_path)
 
         self.batch_file.write(cmdline)
         os.close(self.batch_fd)
@@ -525,7 +522,7 @@ class Jobs():
             print("Submitted {} jobs.".format(len(self.jobs)))
         except CalledProcessError as cpe:
             raise OFXError(
-                "Error sumbitting to Distributed OrcaFlex:\n" + cpe.output)
+                    "Error sumbitting to Distributed OrcaFlex:\n" + cpe.output)
 
     def __del__(self):
         """ ensure we have closed the files when the object is destroyed """
@@ -564,13 +561,14 @@ class Jobs():
             jobs.reverse()
             header = ','.join(head)
             jobs_list = csv.DictReader(
-                io.StringIO(header + '\n' + '\n'.join(jobs)))
+                    io.StringIO(header + '\n' + '\n'.join(jobs)))
 
             for job in jobs_list:
                 yield job
         else:
             raise OFXError(
-                "\n Error communicating with the distrubuted OrcaFlex server:\n" + stderr)
+                    "\n Error communicating with the distrubuted OrcaFlex server:\n" + stderr)
+
 
 if __name__ == "__main__":
     pass
