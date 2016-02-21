@@ -18,11 +18,11 @@ TODO
 
 CHANGELOG
 =========
-0.1.2 - fixing issues with setup.py
+0.1.2 - fixing issues with setup.py  
 0.1.1  - Support for OrcaFlex 10.0  
-0.1.0  - Added python 3 support
+0.1.0  - Added python 3 support  
 0.0.16 - Added Documentation (no really!) fixed the drawing helpers [#2](https://github.com/FLEXSIS/pyofx/issues/2)   
-0.0.15 - Added clipboard support to vessel_drawing 
+0.0.15 - Added clipboard support to vessel_drawing  
 0.0.14 - Fix for [#1](https://github.com/FLEXSIS/pyofx/issues/1)  
 0.0.13 - Added Model.lines, Model.vessels, Model.six_d_buoys attributes
          various performance enhancements  
@@ -33,7 +33,7 @@ CHANGELOG
 
 The MIT License (MIT)
 
-Copyright (c) 2014 FLEXSIS
+Copyright (c) 2016 FLEXSIS
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
