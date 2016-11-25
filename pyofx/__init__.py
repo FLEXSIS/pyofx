@@ -1,31 +1,51 @@
-try:
-    import winreg
-except:
-    import winreg
+import csv
+import inspect
+import io
+import math
+import os
+import tempfile
+import winreg
+from functools import wraps
+from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 
-try:
+import time
+from OrcFxAPI import *
+
+if sys.version_info[0] >= 3:
     from tkinter import Tk
-except ImportError:
+else:
     # python 2 then
     from Tkinter import Tk
 
-import os
-import tempfile
-import csv
-from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
-import io
-import inspect
-import math
-
-from OrcFxAPI import *
-
 _is64bit = ctypes.sizeof(ctypes.c_voidp) == 8
-
 
 class OFXError(Exception):
     """Branded errors so we know it's our fault"""
     pass
 
+def retry_on_licence_error(retry_count=10, wait_period=2, one_last_try=False):
+    """
+    Simple view decorator to retry while a licence
+    """
+
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if retry_count < 1:
+                raise ValueError(u"retry_count must be 1 or higher.")
+            for i in range(retry_count):
+                try:
+                    v = f(*args, **kwargs)
+                    return v
+                except DLLError as e:
+                    if e.status == stLicensingError:
+                        time.sleep(wait_period)
+                    else:
+                        raise e
+
+        return decorated_function
+
+    return decorator
 
 def gamma_dnv(h_s, t_p):
     """the peak shape parameter (gamma) according to DNV-RP-H103 2.2.6.9"""
@@ -37,6 +57,7 @@ def gamma_dnv(h_s, t_p):
         return 1.0
     else:
         return math.exp(5.75 - (1.15 * (t_p / math.sqrt(h_s))))
+
 
 
 def check_licence():
@@ -73,11 +94,11 @@ def get_unc_path(local_name):
     length = ctypes.c_long(0)
     remote_name = ctypes.create_string_buffer("")
     result = WNetGetConnection(
-            mapped_name, remote_name, ctypes.byref(length))
+        mapped_name, remote_name, ctypes.byref(length))
     if result == ERROR_MORE_DATA:
         remote_name = ctypes.create_string_buffer(length.value)
         result = WNetGetConnection(
-                mapped_name, remote_name, ctypes.byref(length))
+            mapped_name, remote_name, ctypes.byref(length))
         if result != 0:
             return None
         else:
@@ -162,10 +183,73 @@ def buoy_drawing(size, ofx_object=None):
         _xyz_to_clipboard(_sx, _sy, _sz)
 
 
-class Model(Model):
-    """Wrapper around OrcFxAPI.Model to add extra functionality.
+def airy_wave_length(water_depth, wave_period, g=9.80665):
+    """ calculates depth dependent airy wave length as per DNV-RP-C205 3.2.2.4, p36.
 
-    1. added path attribute so the location of the model on the disc can be found from:
+    Args:
+        water_depth: float of water depth [m]
+        wave_period: float of wave period [s]
+        g: acceleration due to gravity [m/s2]
+
+    Returns:
+        float of airy wave length [m]
+    """
+    # alpha values are coefficients from DNV
+
+    alpha1 = 0.666
+    alpha2 = 0.445
+    alpha3 = -0.105
+    alpha4 = 0.272
+    d = water_depth
+    T = wave_period
+
+    def _w_(d, g, T):
+        return (4.0 * d * math.pi ** 2.0) / (g * T ** 2.0)
+
+    def _f_w_(w_):
+        return 1 + (alpha1 * w_**1.0) + (alpha2 * w_**2.0) + (alpha3 * w_**3.0) + (
+            alpha4 * w_**4.0)
+
+    w_ = _w_(d=d, g=g, T=T)
+    f_w_ = _f_w_(w_=w_)
+
+    return T * (g * d)**0.5 * (f_w_ / (1 + w_ * f_w_))**0.5
+
+def breaking_wave_height(water_depth, wave_period):
+    """the breaking wave height (clone of OrcaFlex breaking wave calculation due to Miche)
+
+    Args:
+        water_depth: float of water depth [m]
+        wave_period: float of wave period [s]
+
+    Returns:
+        float of breaking wave height [m] if wave_height == None
+    """
+    L = airy_wave_length(water_depth=water_depth, wave_period=wave_period)
+    k = 2.0 * math.pi / L
+    breaking_height = 0.88 * (1.0 / k) * math.tanh(0.89 * k * water_depth)
+    return breaking_height
+
+def breaking_wave(water_depth, wave_period, wave_height):
+    """whether a wave is breaking (clone of OrcaFlex breaking wave calculation due to Miche).
+
+    will return True if height is > the breaking wave height
+
+    Args:
+        water_depth: float of water depth [m]
+        wave_period: float of wave period [s]
+        wave_height: None or float of wave height [m]
+
+    Returns:
+        bool
+
+    """
+    return breaking_wave_height(water_depth, wave_period) < wave_height
+
+class Model(Model):
+    r"""Wrapper around OrcFxAPI.Model to add extra functionality.
+
+    1. added path attribute so the location of the model on the disk can be found from:
 
     >>> model = Model(r"C:\path\to\data_file.dat")
     >>> model.path
@@ -233,7 +317,7 @@ class Model(Model):
             assert os.path.isdir(installation_directory)
         except AssertionError as error:
             raise OFXError(
-                    "{} might not be a directory".format(installation_directory))
+                "{} might not be a directory".format(installation_directory))
         os.chdir(installation_directory)
         try:
             print("{} has been opened in the OrcaFlex GUI.".format(self.path))
@@ -241,7 +325,7 @@ class Model(Model):
             print("{} has been closed.".format(self.path))
         except CalledProcessError as cpe:
             raise OFXError(
-                    "Error opening {} in OrcaFlex:\n{}".format(self.path, cpe.output))
+                "Error opening {} in OrcaFlex:\n{}".format(self.path, cpe.output))
 
     def SaveData(self, filename):
         super(Model, self).SaveData(filename)
@@ -264,7 +348,7 @@ class Model(Model):
         return os.path.splitext(os.path.split(self.path)[1])[0]
 
     def objects_of_type(self, type_name, test=None):
-        """list of all objects in model with `typeName` equal to `type_name`
+        r"""list of all objects in model with `typeName` equal to `type_name`
 
         option to add a test function to further filter the list
         """
@@ -277,8 +361,8 @@ class Model(Model):
             return typed_objects
         else:
             raise OFXError(
-                    ("The test must be for a string in the object name or a filter function. ",
-                     "Was passed an {}".format(type(test))))
+                ("The test must be for a string in the object name or a filter function. ",
+                 "Was passed an {}".format(type(test))))
 
     @property
     def lines(self):
@@ -317,7 +401,7 @@ class Models(object):
 
     There are various other options as detailed in the api_docs_:
 
-    .. autofunction:: pyofx.Models.__init__
+    .. autofunction :: pyofx.Models.__init__
 
 
     """
@@ -346,7 +430,7 @@ class Models(object):
         self.filetype = filetype
         if self.filetype not in ['sim', 'dat', 'yml']:
             raise OFXError(
-                    "filetype must be 'sim', 'dat' or 'yml' not '{}'".format(self.filetype))
+                "filetype must be 'sim', 'dat' or 'yml' not '{}'".format(self.filetype))
         self.sub = subdirectories
         self.return_model = return_model
         self.virtual_logging = virtual_logging
@@ -355,14 +439,15 @@ class Models(object):
         else:
             self.filter_function = filter_function
 
-        # TODO: Fix so that return_model=False cannot be checked for failed
-        # simulation.
 
-        if return_model and failed_function and filetype == "sim":
-            self.failed_function = failed_function
-        elif failed_function:
+        if (not return_model) and (failed_function is not None):
             raise OFXError(
-                    "Failed failed_function needs to be called on .sim files")
+                "Failed failed_function needs to be called on .model files")
+        elif return_model and failed_function and filetype == "dat":
+            raise OFXError(
+                "Failed failed_function needs to be called on .sim files")
+        elif failed_function:
+            self.failed_function = failed_function
 
         if isinstance(directories, str):
             self._dirs.append(directories)
@@ -390,6 +475,8 @@ class Models(object):
                     _model.UseVirtualLogging()
                     if self.filetype == "sim":
                         _model.LoadSimulation(model_path)
+                        if self.failed_function and _model.state == "SimulationStoppedUnstable":
+                            _model = self.failed_function(_model)
                     else:
                         _model.LoadData(model_path)
                     return _model
@@ -399,7 +486,7 @@ class Models(object):
                 return model_path
 
         test_fun = lambda _rf: self.filter_function(
-                os.path.join(_rf[0], _rf[1])) and _rf[1].endswith(extension)
+            os.path.join(_rf[0], _rf[1])) and _rf[1].endswith(extension)
         for d in self._dirs:
             if self.sub:
                 paths = [(r, f) for r, d, f in os.walk(d)]
@@ -441,7 +528,7 @@ class Jobs():
                                 'Software\\Orcina\\Distributed OrcaFlex\\Installation Directory',
                                 0, winreg.KEY_READ | winreg.KEY_WOW64_32KEY) as key:
                 self.installation_directory = winreg.QueryValueEx(
-                        key, 'Normal')[0]
+                    key, 'Normal')[0]
         except WindowsError:
             raise OFXError("Distributed OrcaFlex not found.")
         if not dllname:
@@ -450,14 +537,14 @@ class Jobs():
                                     'Software\\Orcina\\Distributed OrcaFlex',
                                     0, winreg.KEY_READ | winreg.KEY_WOW64_32KEY) as key:
                     self.dllname = winreg.QueryValueEx(
-                            key, 'DOFWorkingDirectory')[0]
+                        key, 'DOFWorkingDirectory')[0]
             except WindowsError:
                 try:
                     with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
                                         'Software\\Orcina',
                                         0, winreg.KEY_READ | winreg.KEY_WOW64_32KEY) as key:
                         self.dllname = winreg.QueryValueEx(
-                                key, 'DOFDefaultDLLFileName')[0]
+                            key, 'DOFDefaultDLLFileName')[0]
                 except:
                     raise OFXError("An attempt to find the location of OrcFxAPI.dll failed."
                                    " You should set the registry keys as advised in the "
@@ -469,9 +556,9 @@ class Jobs():
         self.batch_fd, self.batch_path = tempfile.mkstemp(suffix=".bat")
         self.batch_file = open(self.batch_path, 'wb')
         self.batch_file.write(
-                """echo off\r\ncd "%s"\r\n""" % self.installation_directory)
+            """echo off\r\ncd "%s"\r\n""" % self.installation_directory)
         self.file_list_fd, self.file_list_path = tempfile.mkstemp(
-                suffix=".txt")
+            suffix=".txt")
         self.file_list_file = open(self.file_list_path, 'wb')
 
     def __iter__(self):
@@ -489,7 +576,7 @@ class Jobs():
                 filepath = get_unc_path(filepath[0]) + filepath[2:]
             else:
                 raise OFXError(
-                        "{} must be a network filepath (or mapped drive).".format(filepath))
+                    "{} must be a network filepath (or mapped drive).".format(filepath))
         try:
             a = open(filepath)
             a.close()
@@ -508,11 +595,11 @@ class Jobs():
 
         cmdline_template = '"{}" -add {}{}-dllname="{}" "{}"\r\n'
         cmdline = cmdline_template.format(
-                os.path.join(self.installation_directory,
-                             "dofcmd.exe"),
-                "-wait " if wait else "",
-                "-statics " if statics else "",
-                self.dllname, self.file_list_path)
+            os.path.join(self.installation_directory,
+                         "dofcmd.exe"),
+            "-wait " if wait else "",
+            "-statics " if statics else "",
+            self.dllname, self.file_list_path)
 
         self.batch_file.write(cmdline)
         os.close(self.batch_fd)
@@ -525,7 +612,7 @@ class Jobs():
             print("Submitted {} jobs.".format(len(self.jobs)))
         except CalledProcessError as cpe:
             raise OFXError(
-                    "Error sumbitting to Distributed OrcaFlex:\n" + cpe.output)
+                "Error sumbitting to Distributed OrcaFlex:\n" + cpe.output)
 
     def __del__(self):
         """ ensure we have closed the files when the object is destroyed """
@@ -564,13 +651,13 @@ class Jobs():
             jobs.reverse()
             header = ','.join(head)
             jobs_list = csv.DictReader(
-                    io.StringIO(header + '\n' + '\n'.join(jobs)))
+                io.StringIO(header + '\n' + '\n'.join(jobs)))
 
             for job in jobs_list:
                 yield job
         else:
             raise OFXError(
-                    "\n Error communicating with the distrubuted OrcaFlex server:\n" + stderr)
+                "\n Error communicating with the distrubuted OrcaFlex server:\n" + stderr)
 
 
 if __name__ == "__main__":

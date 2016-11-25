@@ -1,4 +1,7 @@
-import winreg
+try:
+    import winreg
+except:
+    import winreg
 
 try:
     from tkinter import Tk

@@ -1,7 +1,7 @@
 PYOFX
 =====
 
-### A wrapper around [Orcina's OrcFxAPI](http://www.orcina.com/SoftwareProducts/OrcaFlex/Documentation/OrcFxAPIHelp/) 
+### A wrapper around [Orcina's OrcFxAPI](https://pypi.python.org/pypi/OrcFxAPI)
 
 **You will need to have OrcaFlex and the Python API installed before any of this will work**
 
@@ -18,6 +18,8 @@ TODO
 
 CHANGELOG
 =========
+0.1.4 - fix the pypandoc rubbish, a retry_on_licence_error decorator exists (but is untested)
+0.1.3 - update readme to point to OrcFxAPI on pypi, remove mindless import at top of module.
 0.1.2 - fixing issues with setup.py  
 0.1.1  - Support for OrcaFlex 10.0  
 0.1.0  - Added python 3 support  

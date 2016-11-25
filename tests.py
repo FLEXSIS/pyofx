@@ -2,7 +2,7 @@ import unittest
 from pyofx import *
 import tempfile
 import random
-from os import path
+from os import path, environ
 import shutil
 import sys
 from itertools import product
@@ -122,24 +122,32 @@ class TestModels(unittest.TestCase):
             self.assertTrue(m.path.endswith('.sim'))
 
     def test_one_dir_return_dat_path(self):
-        for m in Models(self._temp_dir1, return_model=False):
+        for m in Models(self._temp_dir1,
+                        return_model=False):
             self.assertIsInstance(m, str)
             self.assertTrue(path.exists(m))
             self.assertTrue(m.endswith('.dat'))
 
     def test_one_dir_return_sim_path(self):
         for m in Models(self._temp_dir2,
-                        filetype="sim", return_model=False):
+                        filetype="sim",
+                        return_model=False):
             self.assertIsInstance(m, str)
             self.assertTrue(path.exists(m))
             self.assertTrue(m.endswith('.sim'))
 
     def test_one_dir_return_sim_use_virtual(self):
         for m in Models(self._temp_dir2,
-                        filetype="sim", virtual_logging=True):
+                        filetype="sim",
+                        virtual_logging=True):
             self.assertIsInstance(m, Model)
             with self.assertRaises(DLLError):
                 m.RunSimulation()
+
+    def test_failed_function(self):
+        #TODO
+
+        pass
 
 
 class TestDrawings(unittest.TestCase):
@@ -169,6 +177,8 @@ class TestDrawings(unittest.TestCase):
         self.assertListEqual(list(self.sd.VertexX), _x)
         self.assertListEqual(list(self.sd.VertexY), _y)
         self.assertListEqual(list(self.sd.VertexZ), _z)
+
+
 
 
 if __name__ == '__main__':
