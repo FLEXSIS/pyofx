@@ -6,10 +6,31 @@
 Welcome to pyofx's documentation!
 =================================
 
+.. raw:: html
+
+    <a href="http://jenkins.ael.onl:8080/job/pyofx/badge/icon"><img src="http://jenkins.ael.onl:8080/job/pyofx/badge/icon" style="padding-right: 5px;"></a>
+
+
+
+.. image:: https://img.shields.io/pypi/status/pyofx.svg
+    :target: https://pypi.python.org/pypi/pyOfx
+
+
+
+.. image:: https://img.shields.io/pypi/pyversions/pyofx.svg
+    :target: https://pypi.python.org/pypi/pyOfx
+
+
+
+.. image:: https://img.shields.io/pypi/v/pyofx.svg
+    :target: https://pypi.python.org/pypi/pyOfx
+
+
 .. toctree::
    :maxdepth: 2
 
    api_docs
+
 
 pyofx is an `OrcFxAPI <http://www.orcina.com/SoftwareProducts/OrcaFlex/Documentation/OrcFxAPIHelp/>`_ extension.
 
@@ -20,7 +41,8 @@ It also wraps the `OrcFxAPI.Model` class to provide extra functionality and offe
 Pre-requisites
 --------------
 
-pyofx has been built and tested on Python 2.7 and with version 9.7 of the OrcaFlex DLL
+pyofx has been built and tested on a range of python versions and with the most recently available `OrcFxAPI version on PyPI <https://pypi.python.org/pypi/OrcFxAPI>`_ .
+
 
 pyofx is pure Python and does not rely on any external packages with the exception of OrcFxAPI, which you will need to have `installed <http://www.orcina.com/SoftwareProducts/OrcaFlex/Documentation/OrcFxAPIHelp/Content/html/PythonInterface,Installation.htm>`_.
 
@@ -71,7 +93,7 @@ Distributed OrcaFlex
 
 There is also a way to add files to Distributed OrcaFlex from python with:
 
-.. autoclass:: pyofx.Jobs
+.. autoclass:: :noindex:pyofx.Jobs
 
 
 Indices and tables

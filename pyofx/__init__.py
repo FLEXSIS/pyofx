@@ -4,7 +4,6 @@ import io
 import math
 import os
 import tempfile
-import winreg
 from functools import wraps
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 
@@ -13,9 +12,11 @@ from OrcFxAPI import *
 
 if sys.version_info[0] >= 3:
     from tkinter import Tk
-else:
+    import winreg
+else: # pragma: no cover
     # python 2 then
     from Tkinter import Tk
+    import _winreg
 
 _is64bit = ctypes.sizeof(ctypes.c_voidp) == 8
 
@@ -68,7 +69,7 @@ def check_licence():
     try:
         _m = Model()
         return True
-    except DLLError:
+    except DLLError: # pragma: no cover
         return False
 
 
@@ -82,7 +83,7 @@ def get_modes(model, line, from_mode=-1, to_mode=100):
              1 / modes.modeDetails(mode).period) for mode in range(modes.modeCount)]
 
 
-def get_unc_path(local_name):
+def get_unc_path(local_name): # pragma: no cover
     """the UNC path of a mapped drive. 
 
     Useful because some distributed OrcaFlex versions
@@ -300,7 +301,7 @@ class Model(Model):
         else:
             self.path = None
 
-    def open(self):
+    def open(self): # pragma: no cover
         if not self.path:
             fd, self.path = tempfile.mkstemp(suffix=".dat")
             os.close(fd)
@@ -448,6 +449,8 @@ class Models(object):
                 "Failed failed_function needs to be called on .sim files")
         elif failed_function:
             self.failed_function = failed_function
+        else:
+            self.failed_function = None
 
         if isinstance(directories, str):
             self._dirs.append(directories)
@@ -496,7 +499,7 @@ class Models(object):
                 yield model_or_path(root, file_)
 
 
-class Jobs():
+class Jobs(): # pragma: no cover
     r""" Python interface to Distributed OrcaFlex
 
         >>> from pyofx import Jobs

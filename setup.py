@@ -2,13 +2,13 @@ from setuptools import setup
 
 setup(
         name="pyOfx",
-        version="0.1.4",
+        version="0.1.5",
         author="Steven Rossiter",
         author_email="steve@flexsis.co.uk",
         description=("A wrapper around OrcFxAPI by Orcina "
                      "to add extra functionality."),
         license="MIT",
-        keywords="orcaflex api wrapper subsea engineering",
+        keywords="orcaflex api wrapper subsea engineering".split(),
         url="https://pythonhosted.org/pyOfx/",
         packages=['pyofx'],
         classifiers=[
@@ -20,6 +20,7 @@ setup(
             "Operating System :: Microsoft :: Windows",
             "Programming Language :: Python :: 2.7",
             "Programming Language :: Python :: 3.4",
+            "Programming Language :: Python :: 3.6",
             "Topic :: Scientific/Engineering :: Physics"
         ],
 )

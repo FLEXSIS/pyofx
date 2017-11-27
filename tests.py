@@ -7,15 +7,22 @@ import shutil
 import sys
 from itertools import product
 
+from pyofx import _xyz_to_clipboard
+
 
 class TestModelAttributes(unittest.TestCase):
-
     def setUp(self):
         self._temp_dir = tempfile.mkdtemp()
         self._model_name = "Temp Model"
 
     def test_path_attributes(self):
         self.dat, self.sim = dat_sim_paths(self._temp_dir, self._model_name)
+        m = Model()
+        m.SaveData(self.dat)
+        self.assertEqual(m.path, self.dat)
+        self.assertEqual(self._model_name, m.model_name)
+        del m
+        self.dat, self.sim = dat_sim_paths(self._temp_dir, self._model_name, yml=True)
         m = Model()
         m.SaveData(self.dat)
         self.assertEqual(m.path, self.dat)
@@ -36,7 +43,6 @@ class TestModelAttributes(unittest.TestCase):
 
 
 class TestObjectFilter(unittest.TestCase):
-
     def setUp(self):
         self.m = Model()
         self.line_objects = ['TEST LINE {}'.format(n) for n in range(1, 11)]
@@ -89,7 +95,6 @@ class TestObjectFilter(unittest.TestCase):
 
 
 class TestModels(unittest.TestCase):
-
     @classmethod
     def setUpClass(self):
         self._temp_dir1 = tempfile.mkdtemp()
@@ -145,15 +150,15 @@ class TestModels(unittest.TestCase):
                 m.RunSimulation()
 
     def test_failed_function(self):
-        #TODO
+        # TODO
 
         pass
 
 
-class TestDrawings(unittest.TestCase):
-
+class TestHelpers(unittest.TestCase):
     def setUp(self):
         self.m = Model()
+        self.l = self.m.CreateObject(otLine, "Test Line")
         self.sd = self.m.CreateObject(ot6DBuoy)
         self.v = self.m.CreateObject(otVessel)
 
@@ -167,6 +172,7 @@ class TestDrawings(unittest.TestCase):
         self.assertListEqual(list(vt.VertexY), _y)
         self.assertListEqual(list(vt.VertexZ), _z)
         self.assertIsNone(vessel_drawing(100, 16, 16))
+        self.assertIsNone(_xyz_to_clipboard(_x, _y, _z))
 
     def test_six_d_buoy_drawing(self):
         self.assertIsNone(buoy_drawing(2))
@@ -178,7 +184,20 @@ class TestDrawings(unittest.TestCase):
         self.assertListEqual(list(self.sd.VertexY), _y)
         self.assertListEqual(list(self.sd.VertexZ), _z)
 
+    def test_gamma(self):
+        self.assertEqual(gamma_dnv(3.99, 10), 1.0)
+        self.assertEqual(gamma_dnv(7.7, 10), 5.0)
+        self.assertNotEqual(gamma_dnv(6, 10), 1.0)
+        self.assertNotEqual(gamma_dnv(6, 10), 5.0)
 
+    def test_licence_check(self):
+        self.assertTrue(check_licence())
+
+    def test_modes(self):
+        self.assertEqual(len(get_modes(self.m, self.l, from_mode=1, to_mode=5)), 5)
+
+        # def test_unc_path(self):
+        #     self.assertIsNone(get_unc_path(r"C:\\"))
 
 
 if __name__ == '__main__':

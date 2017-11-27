@@ -1,6 +1,13 @@
 PYOFX
 =====
 
+[![Coverage Status](https://coveralls.io/repos/github/FLEXSIS/pyofx/badge.svg?branch=master)](https://coveralls.io/github/FLEXSIS/pyofx?branch=master) 
+[![Build Status](http://jenkins.ael.onl:8080/job/pyofx/badge/icon)](http://jenkins.ael.onl:8080/job/pyofx/)
+[![PyPI](https://img.shields.io/pypi/v/pyofx.svg)](https://pypi.python.org/pypi/pyOfx)
+[![PyPI](https://img.shields.io/pypi/status/pyofx.svg)]()
+[![PyPI](https://img.shields.io/pypi/l/pyofx.svg)](https://pypi.python.org/pypi/pyOfx)
+[![PyPI](https://img.shields.io/pypi/pyversions/pyofx.svg)](https://pypi.python.org/pypi/pyOfx)
+
 ### A wrapper around [Orcina's OrcFxAPI](https://pypi.python.org/pypi/OrcFxAPI)
 
 **You will need to have OrcaFlex and the Python API installed before any of this will work**
@@ -12,12 +19,13 @@ TODO
 
 * implement Models failed_function
 * Complete Documentation
-* Add more tests
+* improve test coverage
 * Improve the way Jobs works
 
 
 CHANGELOG
 =========
+0.1.5 - add tox, coveralls and jenkins
 0.1.4 - fix the pypandoc rubbish, a retry_on_licence_error decorator exists (but is untested)
 0.1.3 - update readme to point to OrcFxAPI on pypi, remove mindless import at top of module.
 0.1.2 - fixing issues with setup.py  
@@ -35,7 +43,7 @@ CHANGELOG
 
 The MIT License (MIT)
 
-Copyright (c) 2016 FLEXSIS
+Copyright (c) 2017 FLEXSIS
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
