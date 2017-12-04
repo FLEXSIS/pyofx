@@ -8,7 +8,13 @@ from functools import wraps
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 
 import time
-from OrcFxAPI import *
+from sys import platform
+
+if platform == "win32":
+    from OrcFxAPI import *
+else:  # pragma: no cover
+    # hack for readthedocs to not freakout
+    pass
 
 if sys.version_info[0] >= 3:
     from tkinter import Tk
