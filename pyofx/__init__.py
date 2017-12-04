@@ -24,6 +24,9 @@ if platform == "win32":
 else:  # pragma: no cover
     # hack for readthedocs to not freakout
     warn("Importing on a non-Windows platform. Fine for building docs, terrible for OrcaFlexing")
+    class Model:
+        pass
+    
     pass
 
 
