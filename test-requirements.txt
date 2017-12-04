@@ -1,4 +1,4 @@
 -r requirements.txt
 tox
 sphinx
-sphinx-pypi-upload
+coveralls
