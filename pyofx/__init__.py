@@ -9,20 +9,23 @@ from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 
 import time
 from sys import platform, version_info
+from warnings import warn
 
 if platform == "win32":
     from OrcFxAPI import *
+    if version_info[0] >= 3:
+        from tkinter import Tk
+        import winreg
+    else:  # pragma: no cover
+        # python 2 then
+        from Tkinter import Tk
+        import _winreg
 else:  # pragma: no cover
     # hack for readthedocs to not freakout
+    warn("Importing on a non-Windows platform. Fine for building docs, terrible for OrcaFlexing")
     pass
 
-if version_info[0] >= 3:
-    from tkinter import Tk
-    import winreg
-else: # pragma: no cover
-    # python 2 then
-    from Tkinter import Tk
-    import _winreg
+
 
 _is64bit = ctypes.sizeof(ctypes.c_voidp) == 8
 
